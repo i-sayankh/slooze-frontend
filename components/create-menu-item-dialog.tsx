@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function CreateMenuItemDialog({
   restaurantId,
@@ -24,8 +25,10 @@ export default function CreateMenuItemDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitting(true);
     try {
       await api.post("/menu-items/", {
         name,
@@ -42,6 +45,8 @@ export default function CreateMenuItemDialog({
       refresh();
     } catch {
       toast.error("Failed to add menu item");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -75,7 +80,16 @@ export default function CreateMenuItemDialog({
           onChange={(e) => setPrice(e.target.value)}
         />
 
-        <Button onClick={handleSubmit}>Add</Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting ? (
+            <>
+              <Spinner className="size-4" />
+              Adding item...
+            </>
+          ) : (
+            "Add"
+          )}
+        </Button>
       </DialogContent>
     </Dialog>
   );

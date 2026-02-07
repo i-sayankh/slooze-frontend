@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { getUser } from "@/lib/user";
 import toast from "react-hot-toast";
 
 interface OrderItem {
@@ -64,9 +66,17 @@ function OrderStatus({ status }: { status: string }) {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | number | null>(
     null,
   );
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const user = mounted ? getUser() : null;
+  const canCancel = user?.role === "ADMIN" || user?.role === "MANAGER";
 
   const refreshOrders = async () => {
     const data = await fetchOrders();
@@ -81,6 +91,9 @@ export default function OrdersPage() {
       })
       .catch(() => {
         if (!cancelled) setOrders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
@@ -99,6 +112,15 @@ export default function OrdersPage() {
       setCancellingId(null);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-24">
+        <Spinner className="size-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Loading your orders...</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -149,26 +171,37 @@ export default function OrdersPage() {
                 </span>
               </div>
 
-              <div className="mt-auto pt-1 flex justify-end">
-                {order.status !== "CANCELLED" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-600 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
-                    onClick={() => handleCancelOrder(order)}
-                    disabled={cancellingId === order.id}
-                  >
-                    {cancellingId === order.id ? "Cancelling…" : "Cancel Order"}
-                  </Button>
-                )}
-              </div>
+              {canCancel && (
+                <div className="mt-auto pt-1 flex justify-end">
+                  {order.status !== "CANCELLED" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-600 dark:border-red-500 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                      onClick={() => handleCancelOrder(order)}
+                      disabled={cancellingId === order.id}
+                    >
+                      {cancellingId === order.id ? (
+                        <>
+                          <Spinner className="size-3.5" />
+                          Cancelling…
+                        </>
+                      ) : (
+                        "Cancel Order"
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
       {orders.length === 0 && (
-        <p className="text-muted-foreground mt-4">No orders yet.</p>
+        <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
+          <p className="text-muted-foreground">No orders placed yet. Start by browsing restaurants and placing an order!</p>
+        </div>
       )}
     </div>
   );

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { useCart } from "@/context/cart-context";
 import { getUser } from "@/lib/user";
 import CreateMenuItemDialog from "@/components/create-menu-item-dialog";
@@ -36,16 +37,16 @@ const fetchMenuItems = async (id: string) => {
 };
 
 export default function RestaurantMenuPage() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const { id } = useParams();
   const { addItem, removeItem, items: cartItems } = useCart();
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -59,7 +60,12 @@ export default function RestaurantMenuPage() {
   const user = mounted ? getUser() : null;
 
   if (loading) {
-    return <p className="text-center mt-10">Loading menu...</p>;
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-24">
+        <Spinner className="size-8 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Loading menu items...</p>
+      </div>
+    );
   }
 
   return (
@@ -77,60 +83,37 @@ export default function RestaurantMenuPage() {
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {items.map((item) => (
-          <Card key={item.id} className="hover:shadow-lg transition">
-            <CardContent className="p-6 flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">{item.name}</h2>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-24 text-center">
+          <p className="text-muted-foreground">No menu items available for this restaurant!</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-6">
+          {items.map((item) => (
+            <Card key={item.id} className="hover:shadow-lg transition">
+              <CardContent className="p-6 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">{item.name}</h2>
 
-                {item.is_available ? (
-                  <Badge variant="secondary">Available</Badge>
-                ) : (
-                  <Badge variant="destructive">Unavailable</Badge>
-                )}
-              </div>
-
-              <p className="text-sm text-gray-500">{item.description}</p>
-
-              <div className="flex justify-between items-center mt-4">
-                <span className="font-semibold">₹{item.price}</span>
-
-                {!item.is_available ? (
-                  <Button disabled>Unavailable</Button>
-                ) : (() => {
-                  const quantity =
-                    cartItems.find((c) => c.id === item.id)?.quantity ?? 0;
-                  return quantity === 0 ? (
-                    <Button
-                      onClick={() =>
-                        addItem({
-                          id: item.id,
-                          name: item.name,
-                          price: item.price,
-                          restaurant_id: Number(id),
-                        })
-                      }
-                    >
-                      Add
-                    </Button>
+                  {item.is_available ? (
+                    <Badge variant="secondary">Available</Badge>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <Badge variant="destructive">Unavailable</Badge>
+                  )}
+                </div>
+
+                <p className="text-sm text-gray-500">{item.description}</p>
+
+                <div className="flex justify-between items-center mt-4">
+                  <span className="font-semibold">₹{item.price}</span>
+
+                  {!item.is_available ? (
+                    <Button disabled>Unavailable</Button>
+                  ) : (() => {
+                    const quantity =
+                      cartItems.find((c) => c.id === item.id)?.quantity ?? 0;
+                    return quantity === 0 ? (
                       <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        −
-                      </Button>
-                      <span className="min-w-6 text-center font-medium">
-                        {quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
                         onClick={() =>
                           addItem({
                             id: item.id,
@@ -140,16 +123,45 @@ export default function RestaurantMenuPage() {
                           })
                         }
                       >
-                        +
+                        Add
                       </Button>
-                    </div>
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          −
+                        </Button>
+                        <span className="min-w-6 text-center font-medium">
+                          {quantity}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            addItem({
+                              id: item.id,
+                              name: item.name,
+                              price: item.price,
+                              restaurant_id: Number(id),
+                            })
+                          }
+                        >
+                          +
+                        </Button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

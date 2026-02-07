@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -32,6 +33,7 @@ export default function AddPaymentMethodDialog({
   const [provider, setProvider] = useState("");
   const [lastFour, setLastFour] = useState("");
   const [isDefault, setIsDefault] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
     setType("CARD");
@@ -41,6 +43,7 @@ export default function AddPaymentMethodDialog({
   };
 
   const handleSubmit = async () => {
+    setSubmitting(true);
     try {
       await api.post("/payments/", {
         type,
@@ -55,6 +58,8 @@ export default function AddPaymentMethodDialog({
       await refresh();
     } catch {
       toast.error("Failed to add payment method");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -112,8 +117,15 @@ export default function AddPaymentMethodDialog({
           />
         </div>
 
-        <Button onClick={handleSubmit} className="w-full">
-          Add Payment Method
+        <Button onClick={handleSubmit} disabled={submitting} className="w-full">
+          {submitting ? (
+            <>
+              <Spinner className="size-4" />
+              Adding payment method...
+            </>
+          ) : (
+            "Add Payment Method"
+          )}
         </Button>
       </DialogContent>
     </Dialog>

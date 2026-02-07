@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -42,6 +43,7 @@ export default function UpdatePaymentMethodDialog({
 }) {
   const [provider, setProvider] = useState("");
   const [isDefault, setIsDefault] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (payment) {
@@ -52,6 +54,7 @@ export default function UpdatePaymentMethodDialog({
 
   const handleSubmit = async () => {
     if (!payment) return;
+    setSubmitting(true);
     try {
       await api.put(`/payments/${payment.id}`, {
         provider,
@@ -63,6 +66,8 @@ export default function UpdatePaymentMethodDialog({
       await refresh();
     } catch {
       toast.error("Failed to update payment method");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -117,8 +122,15 @@ export default function UpdatePaymentMethodDialog({
           />
         </div>
 
-        <Button onClick={handleSubmit} className="w-full">
-          Update Payment Method
+        <Button onClick={handleSubmit} disabled={submitting} className="w-full">
+          {submitting ? (
+            <>
+              <Spinner className="size-4" />
+              Updating payment method...
+            </>
+          ) : (
+            "Update Payment Method"
+          )}
         </Button>
       </DialogContent>
     </Dialog>

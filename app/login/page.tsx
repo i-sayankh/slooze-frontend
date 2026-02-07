@@ -7,16 +7,23 @@ import { saveToken } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    const res = await api.post("/auth/login", { email, password });
-    saveToken(res.data.access_token);
-    router.push("/restaurants");
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/login", { email, password });
+      saveToken(res.data.access_token);
+      router.push("/restaurants");
+    } catch {
+      setLoading(false);
+    }
   };
 
   return (
@@ -31,6 +38,7 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
 
           <Input
@@ -38,9 +46,19 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
           />
 
-          <Button onClick={handleLogin}>Login</Button>
+          <Button onClick={handleLogin} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner className="size-4" />
+                Signing in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

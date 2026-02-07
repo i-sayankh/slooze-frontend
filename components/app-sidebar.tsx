@@ -35,9 +35,9 @@ function useHasMounted() {
 }
 
 const navItems = [
-  { title: "Restaurants", href: "/restaurants", icon: UtensilsCrossed },
-  { title: "Payment Methods", href: "/payments", icon: CreditCard },
-  { title: "Orders", href: "/orders", icon: ShoppingBag },
+  { title: "Restaurants", href: "/restaurants", icon: UtensilsCrossed, roles: ["ADMIN", "MANAGER", "MEMBER"] },
+  { title: "Payment Methods", href: "/payments", icon: CreditCard, roles: ["ADMIN"] },
+  { title: "Orders", href: "/orders", icon: ShoppingBag, roles: ["ADMIN", "MANAGER", "MEMBER"] },
 ] as const;
 
 export function AppSidebar() {
@@ -68,7 +68,9 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {navItems
+                .filter((item) => !user?.role || (item.roles as readonly string[]).includes(user.role))
+                .map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

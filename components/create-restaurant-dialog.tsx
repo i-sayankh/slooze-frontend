@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -28,8 +29,10 @@ export default function CreateRestaurantDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    setSubmitting(true);
     try {
       await api.post("/restaurants", {
         name,
@@ -43,6 +46,8 @@ export default function CreateRestaurantDialog({
       await refresh();
     } catch {
       toast.error("Failed to create");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -72,7 +77,16 @@ export default function CreateRestaurantDialog({
           </SelectContent>
         </Select>
 
-        <Button onClick={handleSubmit}>Create</Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting ? (
+            <>
+              <Spinner className="size-4" />
+              Creating restaurant...
+            </>
+          ) : (
+            "Create"
+          )}
+        </Button>
       </DialogContent>
     </Dialog>
   );

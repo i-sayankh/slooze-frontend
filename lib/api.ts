@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken } from "./auth";
 
 const api = axios.create({
-  baseURL: process.env.BACKEND_URL || "http://127.0.0.1:8000",
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
 });
 
 api.interceptors.request.use((config) => {
