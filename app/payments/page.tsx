@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import AddPaymentMethodDialog from "@/components/add-payment-method-dialog";
+import UpdatePaymentMethodDialog from "@/components/update-payment-method-dialog";
 
 interface PaymentMethod {
   id: number;
@@ -22,6 +24,10 @@ const fetchPaymentMethods = async (): Promise<PaymentMethod[]> => {
 
 export default function PaymentsPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod | null>(
+    null,
+  );
 
   const refreshPaymentMethods = async () => {
     const data = await fetchPaymentMethods();
@@ -55,18 +61,38 @@ export default function PaymentsPage() {
             <CardContent className="p-6 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">{pm.provider}</h2>
-                {pm.is_default && (
-                  <Badge variant="secondary">Default</Badge>
-                )}
+                {pm.is_default && <Badge variant="secondary">Default</Badge>}
               </div>
               <Badge variant="outline">{pm.type}</Badge>
               <p className="text-sm text-muted-foreground">
                 •••• {pm.last_four}
               </p>
+              <div className="flex justify-end mt-auto pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPayment(pm);
+                    setUpdateDialogOpen(true);
+                  }}
+                >
+                  Update
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <UpdatePaymentMethodDialog
+        payment={selectedPayment}
+        open={updateDialogOpen}
+        onOpenChange={(open) => {
+          setUpdateDialogOpen(open);
+          if (!open) setSelectedPayment(null);
+        }}
+        refresh={refreshPaymentMethods}
+      />
     </div>
   );
 }
