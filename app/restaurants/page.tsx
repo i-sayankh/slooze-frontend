@@ -23,14 +23,8 @@ const fetchRestaurants = async () => {
 };
 
 export default function RestaurantsPage() {
-  const [mounted, setMounted] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const user = mounted ? getUser() : null;
+  const user = getUser();
 
   const refreshRestaurants = async () => {
     const data = await fetchRestaurants();

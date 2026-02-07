@@ -38,7 +38,7 @@ const fetchMenuItems = async (id: string) => {
 export default function RestaurantMenuPage() {
   const [mounted, setMounted] = useState(false);
   const { id } = useParams();
-  const { addItem } = useCart();
+  const { addItem, removeItem, items: cartItems } = useCart();
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,19 +96,55 @@ export default function RestaurantMenuPage() {
               <div className="flex justify-between items-center mt-4">
                 <span className="font-semibold">₹{item.price}</span>
 
-                <Button
-                  disabled={!item.is_available}
-                  onClick={() =>
-                    addItem({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      restaurant_id: Number(id),
-                    })
-                  }
-                >
-                  Add
-                </Button>
+                {!item.is_available ? (
+                  <Button disabled>Unavailable</Button>
+                ) : (() => {
+                  const quantity =
+                    cartItems.find((c) => c.id === item.id)?.quantity ?? 0;
+                  return quantity === 0 ? (
+                    <Button
+                      onClick={() =>
+                        addItem({
+                          id: item.id,
+                          name: item.name,
+                          price: item.price,
+                          restaurant_id: Number(id),
+                        })
+                      }
+                    >
+                      Add
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        −
+                      </Button>
+                      <span className="min-w-6 text-center font-medium">
+                        {quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          addItem({
+                            id: item.id,
+                            name: item.name,
+                            price: item.price,
+                            restaurant_id: Number(id),
+                          })
+                        }
+                      >
+                        +
+                      </Button>
+                    </div>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
