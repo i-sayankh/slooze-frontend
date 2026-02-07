@@ -42,10 +42,16 @@ interface PaymentsResponse {
 
 export default function CartDrawer() {
   const { items, open, toggleCart, clearCart } = useCart();
-  const user = getUser();
+  const [mounted, setMounted] = useState(false);
   const [payments, setPayments] = useState<PaymentMethod[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const user = mounted ? getUser() : null;
 
   const total = items.reduce(
     (sum, item) => sum + item.price * item.quantity,

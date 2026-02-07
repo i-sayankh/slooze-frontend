@@ -36,12 +36,16 @@ const fetchMenuItems = async (id: string) => {
 };
 
 export default function RestaurantMenuPage() {
-  const user = getUser();
+  const [mounted, setMounted] = useState(false);
   const { id } = useParams();
   const { addItem } = useCart();
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -51,6 +55,8 @@ export default function RestaurantMenuPage() {
       setLoading(false);
     });
   }, [id]);
+
+  const user = mounted ? getUser() : null;
 
   if (loading) {
     return <p className="text-center mt-10">Loading menu...</p>;

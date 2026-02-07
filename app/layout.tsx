@@ -1,8 +1,7 @@
 import { CartProvider } from "@/context/cart-context";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
-import CartDrawer from "@/components/cart-drawer";
 import { Toaster } from "react-hot-toast";
+import { AppLayout } from "@/components/app-layout";
 
 export default function RootLayout({
   children,
@@ -11,12 +10,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 min-h-screen">
+      <body className="bg-gray-50 min-h-screen flex flex-col">
         <Toaster />
         <CartProvider>
-          <Navbar />
-          <CartDrawer />
-          <main className="max-w-6xl mx-auto p-6">{children}</main>
+          <AppLayout>{children}</AppLayout>
         </CartProvider>
       </body>
     </html>
